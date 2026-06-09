@@ -5,6 +5,7 @@ import { pageFilename, renderPage, sanitizeBody } from "./markdown.js";
 import type { PageFrontMatter } from "./markdown.js";
 import { isUnchanged, loadState, markSeen, saveState } from "./state.js";
 import { syncBrain } from "./sync-brain.js";
+import { classifySensitivity } from "./sensitivity.js";
 import type { IngestItem } from "./gmail.js";
 
 /**
@@ -142,7 +143,15 @@ async function main(): Promise<void> {
 
   let written = 0;
   let skipped = 0;
+  let sensitiveSkipped = 0;
   for (const item of candidates) {
+    if (config.skipSensitive) {
+      const s = classifySensitivity(item.fm.title, item.body);
+      if (s.sensitive) {
+        sensitiveSkipped++;
+        continue;
+      }
+    }
     if (isUnchanged(state, item.fm.source, item.fm.id, item.fm.revision)) {
       skipped++;
       continue;
@@ -159,7 +168,7 @@ async function main(): Promise<void> {
   state.lastSyncAt = new Date().toISOString();
   await saveState(config.sourceDir, state);
   console.log(
-    `[from-mcp] candidates=${candidates.length} written=${written} skipped=${skipped}`,
+    `[from-mcp] candidates=${candidates.length} written=${written} skipped=${skipped} sensitive-skipped=${sensitiveSkipped}`,
   );
   await syncBrain();
   console.log("[from-mcp] done.");

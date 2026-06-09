@@ -12,6 +12,7 @@
     "ingest": "tsx ingest/run-sync.ts",
     "ingest:backfill": "tsx ingest/run-sync.ts --backfill",
     "ingest:mcp": "tsx ingest/from-mcp.ts",
+    "scrub": "tsx ingest/scrub.ts",
     "eval": "tsx evals/run-eval.ts",
     "test": "tsx --test ingest/*.test.ts",
     "typecheck": "tsc --noEmit",

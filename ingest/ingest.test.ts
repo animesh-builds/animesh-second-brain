@@ -4,6 +4,7 @@ import assert from "node:assert/strict";
 import { renderPage, sanitizeBody, pageFilename, redactPII } from "./markdown.js";
 import { isUnchanged, markSeen } from "./state.js";
 import type { IngestState } from "./state.js";
+import { classifySensitivity } from "./sensitivity.js";
 
 test("sanitizeBody strips control chars, keeps tab/newline, truncates", () => {
   const NUL = String.fromCharCode(0);
@@ -54,6 +55,18 @@ test("renderPage redacts PII, adds the notice, strips url tracking params", () =
   assert.doesNotMatch(md, /ouid|usp=/);
   // Privacy notice present.
   assert.ok(md.includes("PII redacted per privacy policy"));
+});
+
+test("classifySensitivity flags job-search / compensation / money", () => {
+  assert.equal(classifySensitivity("Razorpay Interview Confirmation", "design round").sensitive, true);
+  assert.equal(classifySensitivity("Re: offer", "Expected CTC: 45 LPA").sensitive, true);
+  assert.equal(classifySensitivity("OpenRouter receipt", "Amount paid $10.80").sensitive, true);
+  assert.deepEqual(
+    classifySensitivity("Job alert", "Product Manager applied").categories.includes("job-search"),
+    true,
+  );
+  // Non-sensitive content passes through.
+  assert.equal(classifySensitivity("Meeting notes", "Discussed the roadmap and Q3 themes.").sensitive, false);
 });
 
 test("pageFilename is deterministic and filesystem-safe", () => {

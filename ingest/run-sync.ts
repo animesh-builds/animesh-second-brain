@@ -7,6 +7,7 @@ import { ingestDrive } from "./drive.js";
 import { pageFilename, renderPage } from "./markdown.js";
 import { loadState, markSeen, saveState } from "./state.js";
 import { syncBrain } from "./sync-brain.js";
+import { classifySensitivity } from "./sensitivity.js";
 
 /**
  * Cron entry: pull recent Google data -> write idempotent markdown into the
@@ -40,7 +41,12 @@ async function main(): Promise<void> {
 
   const allItems: IngestItem[] = [...gmailRes.items, ...driveRes.items];
   let written = 0;
+  let sensitiveSkipped = 0;
   for (const item of allItems) {
+    if (config.skipSensitive && classifySensitivity(item.fm.title, item.body).sensitive) {
+      sensitiveSkipped++;
+      continue;
+    }
     const filename = pageFilename(item.fm.source, item.fm.id);
     await writeFile(
       join(config.sourceDir, filename),
@@ -57,7 +63,7 @@ async function main(): Promise<void> {
   console.log(
     `[ingest] gmail: listed=${gmailRes.listed} skipped=${gmailRes.skipped} | ` +
       `drive: listed=${driveRes.listed} skipped=${driveRes.skipped} | ` +
-      `written=${written}`,
+      `written=${written} sensitive-skipped=${sensitiveSkipped}`,
   );
 
   await syncBrain();

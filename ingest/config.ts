@@ -42,6 +42,8 @@ export const config = {
   runGbrainSync: (process.env.RUN_GBRAIN_SYNC ?? "true") !== "false",
   /** PII redaction on by default; the corpus may be shared externally. */
   redactPii: (process.env.REDACT_PII ?? "true") !== "false",
+  /** Skip job-search / compensation / money pages on ingest (safety default). */
+  skipSensitive: (process.env.SKIP_SENSITIVE ?? "true") !== "false",
   /** Person names/terms to scrub (the regex layer can't infer these). */
   redactNames: (process.env.REDACT_NAMES ?? "")
     .split(",")
