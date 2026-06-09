@@ -54,6 +54,16 @@ openclaw config set agents.defaults.model.primary "$AGENT_MODEL" || \
   echo "[wa] set the model manually if the id differs: openclaw models"
 echo "[wa] answer model -> $AGENT_MODEL"
 
+# 3a. Reliability: fallback models (auto-retry transient provider errors),
+#     low temperature (deterministic tool-calling), and disable OpenClaw's
+#     built-in memory-core (a SECOND memory whose index mismatches our embedder
+#     and caused false "I don't have that"). gbrain is the only memory.
+openclaw config set agents.defaults.model.fallbacks "${AGENT_FALLBACKS:-[\"openrouter/google/gemini-2.0-flash\",\"openrouter/meta-llama/llama-3.3-70b-instruct\"]}" --strict-json || true
+openclaw config set models.providers.openrouter.params.temperature 0 || true
+openclaw config set plugins.entries.memory-core.enabled false || true
+echo "[wa] reliability: fallbacks + temp=0 + memory-core disabled"
+echo "[wa] keep the embedder warm: schedule scripts/ollama-keepwarm.sh every ~3 min"
+
 # 3b. Lock the agent to BRAIN-ONLY. Keep the 'coding' profile (it projects the
 #     gbrain MCP tools) but DENY the ENTIRE built-in tool set so the agent is
 #     hard-locked to gbrain only. This is a CAPABILITY guardrail, not a prompt:
