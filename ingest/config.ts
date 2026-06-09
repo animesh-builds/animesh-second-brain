@@ -44,6 +44,8 @@ export const config = {
   redactPii: (process.env.REDACT_PII ?? "true") !== "false",
   /** Skip job-search / compensation / money pages on ingest (safety default). */
   skipSensitive: (process.env.SKIP_SENSITIVE ?? "true") !== "false",
+  /** Restrict the knowledge base to NEWSLETTER emails only — drop everything else. */
+  newslettersOnly: (process.env.NEWSLETTERS_ONLY ?? "false") !== "false",
   /** Person names/terms to scrub (the regex layer can't infer these). */
   redactNames: (process.env.REDACT_NAMES ?? "")
     .split(",")

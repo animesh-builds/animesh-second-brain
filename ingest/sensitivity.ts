@@ -33,6 +33,26 @@ export interface SensitivityResult {
   categories: SensitiveCategory[];
 }
 
+/**
+ * Newsletter detector. The knowledge base is restricted to NEWSLETTER emails
+ * only — everything else (personal mail, transactional, job alerts, account
+ * notices, docs) is excluded. Driven mainly by the sender; content cues back it up.
+ */
+const NEWSLETTER_SENDER =
+  /@(.*\.)?substack\.com|@(mail\.)?mostlymetrics\.com|@timdenning\.com|@every\.to|@mail\.mozilla\.org|newsletters-noreply@linkedin\.com|editors-noreply@linkedin\.com|@mail\.beehiiv\.com|@.*\.beehiiv\.com|@news\.|@newsletter\.|@email\.|@mail\./i;
+
+const NON_NEWSLETTER_SENDER =
+  /jobalerts|jobmail|messages-noreply@linkedin|invitations@linkedin|notifications-noreply@linkedin|no-reply@greenhouse|@naukri|ambitionbox|indeed\.com|receipts?@|no-reply@mail\.ollama|hello@ollama|welcome@|notifications@openrouter|@razorpay|@gofynd|@successpact|@npci/i;
+
+export function isNewsletter(sender: string, title: string, body: string): boolean {
+  if (NON_NEWSLETTER_SENDER.test(sender)) return false;
+  if (NEWSLETTER_SENDER.test(sender)) return true;
+  // Content fallback: clear newsletter footer cues.
+  return /\b(unsubscribe|view (this email )?in (your )?browser|you('|’)re receiving this|manage your subscription)\b/i.test(
+    `${title}\n${body}`,
+  );
+}
+
 /** Classify a page's title + body. Any matched category ⇒ sensitive. */
 export function classifySensitivity(title: string, body: string): SensitivityResult {
   const text = `${title}\n${body}`;
