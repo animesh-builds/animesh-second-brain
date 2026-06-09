@@ -48,6 +48,15 @@ openclaw config set agents.defaults.model.primary "$AGENT_MODEL" || \
   echo "[wa] set the model manually if the id differs: openclaw models"
 echo "[wa] answer model -> $AGENT_MODEL"
 
+# 3b. Lock the agent to BRAIN-ONLY. Keep the 'coding' profile (it projects the
+#     gbrain MCP tools) but DENY the freelancing tools so the agent can't run
+#     shell/email (e.g. himalaya) or hit the live web — it must answer from the
+#     brain or say it doesn't have it. ('minimal' would also drop gbrain, so we
+#     deny instead.)
+openclaw config set tools.profile "coding" || true
+openclaw config set tools.deny '["exec","shell","bash","fetch","web_search","browser","reader"]' --strict-json \
+  || echo "[wa] could not set tools.deny — set it manually to block shell/web."
+
 # 4. Register gbrain as an MCP server so the agent has brain tools. Correct
 #    flag syntax (--command/--arg), with Ollama env so the brain can embed
 #    queries at search time.
