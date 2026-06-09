@@ -11,10 +11,11 @@
     "auth": "tsx ingest/google-auth.ts --login",
     "ingest": "tsx ingest/run-sync.ts",
     "ingest:backfill": "tsx ingest/run-sync.ts --backfill",
+    "ingest:mcp": "tsx ingest/from-mcp.ts",
     "eval": "tsx evals/run-eval.ts",
+    "test": "tsx --test ingest/*.test.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit",
-    "test": "tsx --test ingest/*.test.ts"
+    "lint": "tsc --noEmit"
   },
   "dependencies": {
     "dotenv": "^16.4.5",

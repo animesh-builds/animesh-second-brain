@@ -40,6 +40,13 @@ export const config = {
   maxBodyChars: num("MAX_BODY_CHARS", 40_000),
   maxItemsPerSource: num("MAX_ITEMS_PER_SOURCE", 0),
   runGbrainSync: (process.env.RUN_GBRAIN_SYNC ?? "true") !== "false",
+  /** PII redaction on by default; the corpus may be shared externally. */
+  redactPii: (process.env.REDACT_PII ?? "true") !== "false",
+  /** Person names/terms to scrub (the regex layer can't infer these). */
+  redactNames: (process.env.REDACT_NAMES ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean),
 } as const;
 
 export type Source = "gmail" | "drive" | "docs" | "sheets";

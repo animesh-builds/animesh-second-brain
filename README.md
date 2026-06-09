@@ -19,7 +19,7 @@ Gmail / Drive / Docs / Sheets   (read-only OAuth)
 
 | Path | What it is | Build status |
 |---|---|---|
-| `ingest/` | **The custom bridge.** Read-only Google → idempotent markdown → triggers gbrain sync. | ✅ built + tested |
+| `ingest/` | **The custom bridge.** Read-only Google → idempotent, **PII-redacted** markdown → triggers gbrain sync. Two backends (below). | ✅ built + tested |
 | `brain/` | Setup for [gbrain](https://github.com/garrytan/gbrain) (the brain runtime): local PGLite + OpenAI embeddings. | ✅ install script |
 | `whatsapp/` | Wires [OpenClaw](https://github.com/openclaw/openclaw) (WhatsApp via Baileys) to gbrain over MCP, model = Gemini Flash. | ✅ config + script |
 | `evals/` | Gold-set retrieval/citation eval against gbrain. | ✅ runner + sample |
@@ -29,6 +29,29 @@ Gmail / Drive / Docs / Sheets   (read-only OAuth)
 The brain and WhatsApp layers are **real upstream tools** (gbrain, OpenClaw)
 installed and configured by the scripts here — the only net-new code is the
 `ingest/` bridge.
+
+## Two ingestion backends
+
+Both write the same idempotent, PII-redacted markdown into `sources/google/`:
+
+1. **OAuth bridge** (`pnpm ingest`) — standalone, calls the Google APIs with a
+   refresh token. Needs a one-time Google Cloud OAuth setup (`pnpm auth`). Best
+   for the **unattended 15-min cron**.
+2. **MCP connectors** (`pnpm ingest:mcp <bundle.json>`) — consumes Google data
+   fetched through already-authenticated **MCP connectors** (Gmail, Drive) held
+   by an agent (Claude Code / OpenClaw). **No Google Cloud OAuth setup.** Best
+   for **agent-driven** bootstrapping. See [ingest/mcp-bundle.schema.md](ingest/mcp-bundle.schema.md).
+   (MCP connectors live in the agent session, so for an unattended cron use
+   backend 1, or run `ingest:mcp` from a scheduled headless agent.)
+
+## PII redaction
+
+Ingested content is scrubbed before it reaches disk / the index / the LLM
+(`redactPII` in [ingest/markdown.ts](ingest/markdown.ts)): emails, phone numbers,
+API keys/secrets, video-call links, and IPs → typed `[REDACTED-…]` tags, plus a
+name blocklist (`REDACT_NAMES`) for the specific people in your data. Every page
+carries a "PII redacted per privacy policy" notice. Review pages before sharing —
+free-text names not in the blocklist may remain.
 
 ## Quick start
 
@@ -62,8 +85,9 @@ reply, or *"I don't have that in your knowledge base."*
 | Command | Does |
 |---|---|
 | `pnpm auth` | One-time Google read-only OAuth; prints the refresh token. |
-| `pnpm ingest` | Incremental sync (since last run) → markdown → gbrain. |
-| `pnpm ingest:backfill` | Full ~90-day backfill. |
+| `pnpm ingest` | OAuth backend: incremental sync (since last run) → markdown → gbrain. |
+| `pnpm ingest:backfill` | OAuth backend: full ~90-day backfill. |
+| `pnpm ingest:mcp <bundle.json>` | MCP backend: render agent-fetched Google data (no OAuth setup). |
 | `pnpm test` | Unit + idempotency tests (no network). |
 | `pnpm typecheck` | `tsc --noEmit`. |
 | `pnpm eval` | Gold-set retrieval/citation eval (needs gbrain populated). |
