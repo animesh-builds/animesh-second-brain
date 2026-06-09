@@ -48,15 +48,21 @@ openclaw config set agents.defaults.model.primary "$AGENT_MODEL" || \
   echo "[wa] set the model manually if the id differs: openclaw models"
 echo "[wa] answer model -> $AGENT_MODEL"
 
-# 4. Register gbrain as an MCP server so the agent has brain tools.
-openclaw mcp add gbrain -- gbrain serve || \
-  echo "[wa] gbrain MCP may already be registered (openclaw mcp list)."
+# 4. Register gbrain as an MCP server so the agent has brain tools. Correct
+#    flag syntax (--command/--arg), with Ollama env so the brain can embed
+#    queries at search time.
+GB="$(command -v gbrain || echo gbrain)"
+openclaw mcp add gbrain --command "$GB" --arg serve \
+  --env OLLAMA_BASE_URL="${OLLAMA_BASE_URL:-http://localhost:11434/v1}" \
+  --env OLLAMA_API_KEY="${OLLAMA_API_KEY:-ollama}" --no-probe \
+  || echo "[wa] gbrain MCP may already be registered (openclaw mcp list)."
 
 # 5. WhatsApp channel: install plugin, set the ACCESS ALLOWLIST, then QR login.
 #    Access control is enforced by OpenClaw's native gate (don't hand-roll auth):
 #    only numbers in the allowlist can message the bot and get answers; everyone
 #    else is ignored. WHATSAPP_ALLOW_FROM is a comma-separated list of E.164
 #    numbers, e.g. "+919876543210,+919812345678".
+openclaw plugins install clawhub:@openclaw/whatsapp 2>/dev/null || true
 openclaw channels add --channel whatsapp || true
 if [[ -n "${WHATSAPP_ALLOW_FROM:-}" ]]; then
   # Build a JSON array from the comma-separated list.
