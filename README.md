@@ -1,0 +1,89 @@
+# animesh-second-brain
+
+A single-user, Google-sourced **second brain** you query over **WhatsApp**, with
+**cited** answers and no hallucination. It ingests the last ~90 days of Gmail +
+Drive/Docs/Sheets into a local, embedded knowledge store and answers questions
+from that index — never by re-reading raw Google files per query.
+
+```
+Gmail / Drive / Docs / Sheets   (read-only OAuth)
+          │  ingest/ — every 15 min (cron)
+          ▼
+   sources/google/  ──▶  gbrain (PGLite + OpenAI embeddings)  ──▶  cited retrieval
+          (markdown)                                                    │
+                                                                        ▼
+                              WhatsApp  ◀──  OpenClaw  ◀── gbrain MCP (search / think)
+```
+
+## What's in this repo
+
+| Path | What it is | Build status |
+|---|---|---|
+| `ingest/` | **The custom bridge.** Read-only Google → idempotent markdown → triggers gbrain sync. | ✅ built + tested |
+| `brain/` | Setup for [gbrain](https://github.com/garrytan/gbrain) (the brain runtime): local PGLite + OpenAI embeddings. | ✅ install script |
+| `whatsapp/` | Wires [OpenClaw](https://github.com/openclaw/openclaw) (WhatsApp via Baileys) to gbrain over MCP, model = Gemini Flash. | ✅ config + script |
+| `evals/` | Gold-set retrieval/citation eval against gbrain. | ✅ runner + sample |
+| `scripts/` | 15-min cron wrapper. | ✅ |
+| `sources/google/` | Ingested personal data. **Local-only, gitignored, never pushed.** | runtime |
+
+The brain and WhatsApp layers are **real upstream tools** (gbrain, OpenClaw)
+installed and configured by the scripts here — the only net-new code is the
+`ingest/` bridge.
+
+## Quick start
+
+```bash
+pnpm install
+cp .env.example .env          # fill in Google + OpenAI + Gemini keys
+
+# 1. One-time Google auth (read-only) → prints a refresh token for .env
+pnpm auth
+
+# 2. Stand up the brain (installs gbrain, local PGLite, OpenAI embeddings)
+bash brain/setup.sh
+
+# 3. Backfill ~90 days of Google data, write markdown, embed
+pnpm ingest:backfill
+
+# 4. Wire WhatsApp (installs OpenClaw, registers gbrain MCP, Gemini model)
+bash whatsapp/setup.sh
+openclaw channels login --channel whatsapp   # scan QR
+openclaw start
+
+# 5. Keep it fresh (every 15 min)
+#   */15 * * * * /ABS/PATH/scripts/cron.sh >> /tmp/sb-ingest.log 2>&1
+```
+
+Then message your bot a question whose answer is in your data — expect a cited
+reply, or *"I don't have that in your knowledge base."*
+
+## Commands
+
+| Command | Does |
+|---|---|
+| `pnpm auth` | One-time Google read-only OAuth; prints the refresh token. |
+| `pnpm ingest` | Incremental sync (since last run) → markdown → gbrain. |
+| `pnpm ingest:backfill` | Full ~90-day backfill. |
+| `pnpm test` | Unit + idempotency tests (no network). |
+| `pnpm typecheck` | `tsc --noEmit`. |
+| `pnpm eval` | Gold-set retrieval/citation eval (needs gbrain populated). |
+
+## Privacy & safety (read this)
+
+- **Read-only Google scopes only** (`gmail/drive/spreadsheets/documents.readonly`).
+- **Personal data never leaves your machine in git.** `sources/google/`, `.env`,
+  and the planning docs are gitignored; a `.gitleaks.toml` + the
+  `gitignore-guidance.md` rules guard the public repo.
+- **D007 (open):** the agent LLM is Gemini Flash's free tier, which may train on
+  prompts. **Use test data until you switch to a paid/local model.** Local
+  embeddings keep the *index* private; the *LLM prompt* is the exposed surface.
+
+## Decisions vs. the original plan
+
+Two plan assumptions changed once the upstream repos were inspected:
+- gbrain's real default is **PGLite + OpenAI/ZeroEntropy embeddings**, not
+  Supabase + local bge-small. We use PGLite + OpenAI (simpler, local, matches
+  the demo). Supabase remains the path for a future persistent deploy.
+- `clawinbox` is an empty scaffold; **OpenClaw** is the actual gateway, and its
+  WhatsApp channel already uses Baileys. We wire OpenClaw + gbrain MCP instead
+  of hand-rolling a transport.

@@ -1,0 +1,52 @@
+# ─────────────────────────────────────────────────────────────
+# CRITICAL — repo is PUBLIC. Nothing personal, secret, or
+# planning-related may ever be pushed. See gitignore-guidance.md.
+# ─────────────────────────────────────────────────────────────
+
+# Category 0 — Ingested personal Google data (real emails/docs).
+# Reproducible from Google at any time; treat like secrets.
+sources/google/
+sources/**/*.md
+!sources/**/.gitkeep
+
+# Category 1 — Planning zone (local-only). These live at repo root
+# in this checkout, so they are ignored by exact name as well as
+# the conventional _planning/ folder.
+_planning/
+CLAUDE.md
+prd.md
+architecture.md
+decisions.md
+ai-spec.md
+setup-guide.md
+gitignore-guidance.md
+glossary.md
+session-history.md
+
+# Category 2 — Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*-credentials.json
+client_secret*.json
+token.json
+
+# Category 3/4 — Build & deps
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+
+# Category 6 — Logs & caches
+*.log
+.cache/
+.gbrain/
+*.pglite
+
+# Category 5 — OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/settings.json

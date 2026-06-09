@@ -1,0 +1,5 @@
+{"question": "What did Sam email me about the Q1 budget?", "expectSourceId": "gmail-EXAMPLE_THREAD_ID", "expectAnswer": "budget", "outOfCorpus": false}
+{"question": "What are the action items in my project kickoff doc?", "expectSourceId": "docs-EXAMPLE_FILE_ID", "expectAnswer": "action", "outOfCorpus": false}
+{"question": "What's the total in row 5 of my expenses sheet?", "expectSourceId": "sheets-EXAMPLE_FILE_ID", "expectAnswer": "", "outOfCorpus": false}
+{"question": "What is the capital of France?", "expectSourceId": "", "expectAnswer": "", "outOfCorpus": true}
+{"question": "When is my dentist appointment in 2099?", "expectSourceId": "", "expectAnswer": "", "outOfCorpus": true}

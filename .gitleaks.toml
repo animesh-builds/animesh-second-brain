@@ -1,0 +1,29 @@
+# gitleaks config for animesh-second-brain.
+# Run: gitleaks detect --no-banner   (or via the pre-commit hook in scripts/)
+# Extends the default gitleaks ruleset; adds project-specific guards.
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "google-oauth-refresh-token"
+description = "Google OAuth refresh token"
+regex = '''1//[0-9A-Za-z_-]{30,}'''
+tags = ["google", "oauth"]
+
+[[rules]]
+id = "google-client-secret"
+description = "Google OAuth client secret"
+regex = '''GOCSPX-[0-9A-Za-z_-]{20,}'''
+tags = ["google", "oauth"]
+
+[allowlist]
+description = "Allow example/placeholder values and ignored paths"
+paths = [
+  '''\.env\.example$''',
+  '''README\.md$''',
+]
+regexes = [
+  '''YOUR_[A-Z_]+_HERE''',
+  '''\.\.\.''',
+]

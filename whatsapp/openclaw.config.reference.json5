@@ -1,0 +1,39 @@
+// REFERENCE ONLY — do not copy verbatim into ~/.openclaw/openclaw.json.
+// OpenClaw uses STRICT schema validation and refuses to boot on unknown keys,
+// so let the CLI write the live config (see whatsapp/setup.sh). This file
+// documents the shape the setup script produces. Verify the exact Gemini model
+// id with `openclaw models` and confirm the provider key env var during
+// `openclaw onboard`.
+{
+  agents: {
+    defaults: {
+      workspace: "~/.openclaw/second-brain",
+      model: {
+        // Gemini Flash, free tier (D005/D007). Verify the id: `openclaw models`.
+        primary: "google/gemini-2.0-flash",
+      },
+    },
+  },
+
+  channels: {
+    whatsapp: {
+      enabled: true,
+      // Unknown senders get a pairing code; only paired numbers are processed.
+      dmPolicy: "allowlist",
+      allowFrom: ["+15555550123"], // <- your own WhatsApp number
+      groupPolicy: "disabled",
+    },
+  },
+
+  // gbrain is registered as an outbound MCP server (the brain's tools).
+  // The setup script runs:  openclaw mcp add gbrain -- gbrain serve
+  // which produces an entry equivalent to:
+  mcp: {
+    servers: {
+      gbrain: {
+        command: "gbrain",
+        args: ["serve"],
+      },
+    },
+  },
+}

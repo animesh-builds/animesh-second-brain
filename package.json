@@ -1,0 +1,28 @@
+{
+  "name": "animesh-second-brain",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Single-user, Google-sourced second brain answered over WhatsApp with cited retrieval.",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "auth": "tsx ingest/google-auth.ts --login",
+    "ingest": "tsx ingest/run-sync.ts",
+    "ingest:backfill": "tsx ingest/run-sync.ts --backfill",
+    "eval": "tsx evals/run-eval.ts",
+    "typecheck": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "tsx --test ingest/*.test.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "googleapis": "^144.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}
