@@ -15,7 +15,7 @@ if [[ -f "$ROOT/.env" ]]; then
 fi
 
 # Normalize a phone number to E.164, defaulting to India (+91). Handles
-# "+91-78220 34007", "REDACTED", "91REDACTED", "0REDACTED" -> "+91REDACTED".
+# "+91-90000 00000", "9000000000", "919000000000", "09000000000" -> "+919000000000".
 normalize_phone() {
   local d; d="$(printf '%s' "$1" | tr -cd '0-9')"   # digits only
   d="${d#0}"                                          # drop domestic trunk 0
