@@ -27,19 +27,35 @@ fi
 
 gbrain --version
 
-# 2. Local PGLite brain (no server, 2s) — gbrain's recommended default.
-gbrain init --pglite || echo "[brain] already initialized."
+# 2. Embeddings provider. EMBEDDINGS=ollama (free, local, default) | openai | none.
+#    The model must be chosen at init time (a deferred --no-embedding brain gets
+#    stuck and can't be reconfigured without a reset). So init sizes the schema.
+EMBEDDINGS="${EMBEDDINGS:-ollama}"
 
-# 3. Embeddings: OpenAI (cheap, one key). Requires OPENAI_API_KEY in env/.env.
-if [[ -n "${OPENAI_API_KEY:-}" ]]; then
-  gbrain config set embedding_model "openai:text-embedding-3-small"
-  echo "[brain] embedding model -> openai:text-embedding-3-small"
+if [[ "$EMBEDDINGS" == "ollama" ]]; then
+  # FREE local embeddings via Ollama + nomic-embed-text (768d). No key, no cost.
+  # IMPORTANT: use the official Ollama app, NOT `brew install ollama` (the
+  # Homebrew *formula* ships without the llama-server runner and cannot serve
+  # models). Install the cask/app:  brew install --cask ollama
+  if ! command -v ollama >/dev/null 2>&1; then
+    echo "[brain] installing Ollama (official app)…"; brew install --cask ollama
+  fi
+  open -a Ollama 2>/dev/null || true
+  for i in $(seq 1 15); do curl -s http://127.0.0.1:11434/api/tags >/dev/null 2>&1 && break; sleep 1; done
+  ollama pull nomic-embed-text
+  export OLLAMA_BASE_URL="http://localhost:11434/v1" OLLAMA_API_KEY="ollama"
+  gbrain init --pglite --embedding-model ollama:nomic-embed-text || \
+    gbrain init --force --pglite --embedding-model ollama:nomic-embed-text
+  echo "[brain] embeddings -> ollama:nomic-embed-text (768d, free/local)"
+elif [[ "$EMBEDDINGS" == "openai" && -n "${OPENAI_API_KEY:-}" ]]; then
+  gbrain init --pglite --embedding-model openai:text-embedding-3-small
+  echo "[brain] embeddings -> openai:text-embedding-3-small"
 else
-  echo "[brain] WARNING: OPENAI_API_KEY not set. Keyword search will work;"
-  echo "         set the key and re-run for vector embeddings."
+  gbrain init --pglite --no-embedding
+  echo "[brain] no embeddings — keyword (BM25) search only (still free + cited)."
 fi
 
-# 4. First import + embed of whatever the ingest bridge has written.
+# 3. Import + embed of whatever the ingest bridge has written.
 mkdir -p "$SOURCE_DIR"
 gbrain import "$SOURCE_DIR" --no-embed || true
 gbrain embed --stale || true

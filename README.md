@@ -21,7 +21,7 @@ Gmail / Drive / Docs / Sheets   (read-only OAuth)
 | Path | What it is | Build status |
 |---|---|---|
 | `ingest/` | **The custom bridge.** Read-only Google → idempotent, **PII-redacted** markdown → triggers gbrain sync. Two backends (below). | ✅ built + tested |
-| `brain/` | Setup for [gbrain](https://github.com/garrytan/gbrain) (the brain runtime): local PGLite + OpenAI embeddings. | ✅ install script |
+| `brain/` | Setup for [gbrain](https://github.com/garrytan/gbrain) (the brain runtime): local PGLite + **free local embeddings** (Ollama `nomic-embed-text`) by default; OpenAI optional. | ✅ install script |
 | `whatsapp/` | Wires [OpenClaw](https://github.com/openclaw/openclaw) (WhatsApp via Baileys) to gbrain over MCP, model = Gemini Flash. | ✅ config + script |
 | `evals/` | Gold-set retrieval/citation eval against gbrain. | ✅ runner + sample |
 | `scripts/` | 15-min cron wrapper. | ✅ |
@@ -44,6 +44,20 @@ Both write the same idempotent, PII-redacted markdown into `sources/google/`:
    **agent-driven** bootstrapping. See [ingest/mcp-bundle.schema.md](ingest/mcp-bundle.schema.md).
    (MCP connectors live in the agent session, so for an unattended cron use
    backend 1, or run `ingest:mcp` from a scheduled headless agent.)
+
+## Cost: $0
+
+Runs fully free: **local embeddings** via Ollama `nomic-embed-text` (768d, no
+key), local PGLite store, MCP connectors for data. `bash brain/setup.sh` uses
+this by default (`EMBEDDINGS=ollama`). Set `EMBEDDINGS=openai` (with
+`OPENAI_API_KEY`) or `EMBEDDINGS=none` (keyword/BM25 only) to switch.
+
+> **Ollama gotcha:** use the official app (`brew install --cask ollama`), **not**
+> `brew install ollama` — the Homebrew *formula* ships without the `llama-server`
+> runner and cannot serve models. The setup script uses the cask.
+
+Note: a Claude.ai *Pro subscription* is not an API key and can't be wired into
+gbrain/OpenClaw; the free path above needs no Anthropic/OpenAI key at all.
 
 ## PII redaction
 
