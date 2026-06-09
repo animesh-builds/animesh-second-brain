@@ -33,8 +33,14 @@ fi
 openclaw --version || true
 
 # 2. Workspace + grounding persona (anti-hallucination contract).
+#    AGENTS.md is authoritative; we ALSO overwrite the default SOUL/USER/TOOLS
+#    templates so OpenClaw's "be resourceful / take action" default persona can't
+#    fight the brain-only contract (root cause of the himalaya-freelance bug).
 mkdir -p "$WORKSPACE"
 cp "$ROOT/whatsapp/system-prompt.md" "$WORKSPACE/AGENTS.md"
+for f in SOUL.md TOOLS.md USER.md; do
+  [[ -f "$ROOT/whatsapp/persona/$f" ]] && cp "$ROOT/whatsapp/persona/$f" "$WORKSPACE/$f"
+done
 openclaw config set agents.defaults.workspace "$WORKSPACE"
 
 # 3. Answer-writing model. Default: FREE local Ollama chat model (private).
