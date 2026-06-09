@@ -55,13 +55,15 @@ openclaw config set agents.defaults.model.primary "$AGENT_MODEL" || \
 echo "[wa] answer model -> $AGENT_MODEL"
 
 # 3b. Lock the agent to BRAIN-ONLY. Keep the 'coding' profile (it projects the
-#     gbrain MCP tools) but DENY the freelancing tools so the agent can't run
-#     shell/email (e.g. himalaya) or hit the live web — it must answer from the
-#     brain or say it doesn't have it. ('minimal' would also drop gbrain, so we
-#     deny instead.)
+#     gbrain MCP tools) but DENY the ENTIRE built-in tool set so the agent is
+#     hard-locked to gbrain only. This is a CAPABILITY guardrail, not a prompt:
+#     with no write/edit/exec/web tools, the agent physically cannot create
+#     files or run shell (e.g. set up the himalaya email CLI) — it can only
+#     search the knowledge base. ('minimal' profile would also drop gbrain, so
+#     we keep 'coding' + deny instead.)
 openclaw config set tools.profile "coding" || true
-openclaw config set tools.deny '["exec","shell","bash","fetch","web_search","browser","reader"]' --strict-json \
-  || echo "[wa] could not set tools.deny — set it manually to block shell/web."
+openclaw config set tools.deny '["apply_patch","create_goal","cron","edit","exec","gateway","get_goal","image","message","nodes","process","read","sessions_history","sessions_list","sessions_send","sessions_spawn","sessions_yield","skill_workshop","subagents","tts","update_goal","web_fetch","web_search","whatsapp_login","write","agents_list"]' --strict-json \
+  || echo "[wa] could not set tools.deny — set it manually to hard-lock to gbrain only."
 
 # 4. Register gbrain as an MCP server so the agent has brain tools. Correct
 #    flag syntax (--command/--arg), with Ollama env so the brain can embed
