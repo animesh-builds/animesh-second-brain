@@ -14,6 +14,17 @@ if [[ -f "$ROOT/.env" ]]; then
   set -a; source "$ROOT/.env"; set +a
 fi
 
+# Normalize a phone number to E.164, defaulting to India (+91). Handles
+# "+91-78220 34007", "REDACTED", "91REDACTED", "0REDACTED" -> "+91REDACTED".
+normalize_phone() {
+  local d; d="$(printf '%s' "$1" | tr -cd '0-9')"   # digits only
+  d="${d#0}"                                          # drop domestic trunk 0
+  if   [[ ${#d} -eq 10 ]];                 then printf '+91%s' "$d"   # bare 10-digit -> India
+  elif [[ ${#d} -eq 12 && "$d" == 91* ]];  then printf '+%s'   "$d"   # 91 + 10 digits
+  else                                          printf '+%s'   "$d"   # already has a country code
+  fi
+}
+
 # 1. Install OpenClaw if missing.
 if ! command -v openclaw >/dev/null 2>&1; then
   echo "[wa] installing openclaw..."
@@ -52,7 +63,8 @@ if [[ -n "${WHATSAPP_ALLOW_FROM:-}" ]]; then
   json="["; first=1
   IFS=',' read -ra _nums <<< "$WHATSAPP_ALLOW_FROM"
   for n in "${_nums[@]}"; do
-    n="$(echo "$n" | tr -d '[:space:]')"; [[ -z "$n" ]] && continue
+    [[ -z "$(printf '%s' "$n" | tr -cd '0-9')" ]] && continue
+    n="$(normalize_phone "$n")"   # -> +91XXXXXXXXXX
     [[ $first -eq 0 ]] && json+=","; json+="\"$n\""; first=0
   done
   json+="]"
