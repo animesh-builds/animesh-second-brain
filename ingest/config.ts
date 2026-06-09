@@ -49,4 +49,4 @@ export const config = {
     .filter(Boolean),
 } as const;
 
-export type Source = "gmail" | "drive" | "docs" | "sheets";
+export type Source = "gmail" | "drive" | "docs" | "sheets" | "notion";

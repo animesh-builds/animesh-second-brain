@@ -1,9 +1,10 @@
 # animesh-second-brain
 
-A single-user, Google-sourced **second brain** you query over **WhatsApp**, with
-**cited** answers and no hallucination. It ingests the last ~90 days of Gmail +
-Drive/Docs/Sheets into a local, embedded knowledge store and answers questions
-from that index — never by re-reading raw Google files per query.
+A single-user **second brain** you query over **WhatsApp**, with **cited**
+answers and no hallucination. It ingests Gmail + Drive/Docs/Sheets **+ Notion**
+into a local, embedded knowledge store and answers questions from that index —
+never by re-reading the raw sources per query. Cross-source: one query returns
+cited results spanning email, docs, and Notion.
 
 ```
 Gmail / Drive / Docs / Sheets   (read-only OAuth)
@@ -37,10 +38,10 @@ Both write the same idempotent, PII-redacted markdown into `sources/google/`:
 1. **OAuth bridge** (`pnpm ingest`) — standalone, calls the Google APIs with a
    refresh token. Needs a one-time Google Cloud OAuth setup (`pnpm auth`). Best
    for the **unattended 15-min cron**.
-2. **MCP connectors** (`pnpm ingest:mcp <bundle.json>`) — consumes Google data
-   fetched through already-authenticated **MCP connectors** (Gmail, Drive) held
-   by an agent (Claude Code / OpenClaw). **No Google Cloud OAuth setup.** Best
-   for **agent-driven** bootstrapping. See [ingest/mcp-bundle.schema.md](ingest/mcp-bundle.schema.md).
+2. **MCP connectors** (`pnpm ingest:mcp <bundle.json>`) — consumes data fetched
+   through already-authenticated **MCP connectors** (**Gmail, Drive, Notion**)
+   held by an agent (Claude Code / OpenClaw). **No OAuth setup.** Best for
+   **agent-driven** bootstrapping. See [ingest/mcp-bundle.schema.md](ingest/mcp-bundle.schema.md).
    (MCP connectors live in the agent session, so for an unattended cron use
    backend 1, or run `ingest:mcp` from a scheduled headless agent.)
 

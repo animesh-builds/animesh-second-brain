@@ -67,7 +67,7 @@ test("pageFilename is deterministic and filesystem-safe", () => {
 
 test("idempotency: same id+revision is unchanged after first write", () => {
   const state: IngestState = {
-    seen: { gmail: {}, drive: {}, docs: {}, sheets: {} },
+    seen: { gmail: {}, drive: {}, docs: {}, sheets: {}, notion: {} },
   };
   assert.equal(isUnchanged(state, "gmail", "t1", "rev1"), false);
   markSeen(state, "gmail", "t1", "rev1");

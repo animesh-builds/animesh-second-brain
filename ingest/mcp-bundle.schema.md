@@ -8,11 +8,13 @@ setup** to do for bootstrapping data.
 
 ## Who does what
 
-1. **The agent fetches** Google data through MCP connectors:
+1. **The agent fetches** data through MCP connectors:
    - Gmail: `search_threads` (Gmail query syntax) → `get_thread` (FULL_CONTENT
      for bodies).
    - Drive: `search_files` / `list_recent_files` → `read_file_content`
      (returns clean text/markdown for Docs & Sheets).
+   - Notion: `notion-search` (semantic, workspace + connected sources) →
+     `notion-fetch` (page content as enhanced markdown).
 2. **The agent writes a bundle JSON** with the shape below.
 3. **`from-mcp.ts` renders + redacts + dedupes** — same `renderPage()` /
    `sanitizeBody()` (PII redaction) / `state.ts` idempotency as the OAuth path —
@@ -54,6 +56,15 @@ setup** to do for bootstrapping data.
       "modifiedTime": "2026-06-09T12:32:43Z",    // used as revision
       "viewUrl": "https://docs.google.com/...",  // tracking params stripped on render
       "content": "text/markdown from read_file_content"
+    }
+  ],
+  "notionPages": [
+    {
+      "id": "<pageId>",                          // idempotency key
+      "title": "...",                            // use a descriptive (non-PII) title
+      "url": "https://app.notion.com/p/...",
+      "lastEditedTime": "2026-06-02T18:29:00Z",  // used as revision
+      "content": "page content from notion-fetch"
     }
   ]
 }

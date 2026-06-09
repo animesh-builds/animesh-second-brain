@@ -47,9 +47,17 @@ interface BundleDriveFile {
   viewUrl?: string;
   content?: string;
 }
+interface BundleNotionPage {
+  id: string;
+  title?: string;
+  url?: string;
+  lastEditedTime?: string;
+  content?: string;
+}
 interface Bundle {
   gmailThreads?: BundleThread[];
   driveFiles?: BundleDriveFile[];
+  notionPages?: BundleNotionPage[];
 }
 
 const SHEET_MIME = "application/vnd.google-apps.spreadsheet";
@@ -103,6 +111,19 @@ function driveItem(f: BundleDriveFile): IngestItem | null {
   return { fm, body: sanitizeBody(f.content ?? "", config.maxBodyChars) };
 }
 
+function notionItem(p: BundleNotionPage): IngestItem | null {
+  if (!p.id) return null;
+  const fm: PageFrontMatter = {
+    source: "notion",
+    id: p.id,
+    revision: String(p.lastEditedTime ?? "0"),
+    date: p.lastEditedTime ?? new Date().toISOString(),
+    title: p.title ?? "(untitled)",
+    url: p.url ?? `https://www.notion.so/${p.id.replace(/-/g, "")}`,
+  };
+  return { fm, body: sanitizeBody(p.content ?? "", config.maxBodyChars) };
+}
+
 async function main(): Promise<void> {
   const bundlePath = process.argv[2];
   if (!bundlePath) {
@@ -116,6 +137,7 @@ async function main(): Promise<void> {
   const candidates: IngestItem[] = [
     ...(bundle.gmailThreads ?? []).map(gmailItem),
     ...(bundle.driveFiles ?? []).map(driveItem),
+    ...(bundle.notionPages ?? []).map(notionItem),
   ].filter((x): x is IngestItem => x !== null);
 
   let written = 0;

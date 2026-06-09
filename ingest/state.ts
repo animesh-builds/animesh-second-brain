@@ -17,7 +17,7 @@ export interface IngestState {
 const STATE_FILENAME = ".ingest-state.json";
 
 function emptyState(): IngestState {
-  return { seen: { gmail: {}, drive: {}, docs: {}, sheets: {} } };
+  return { seen: { gmail: {}, drive: {}, docs: {}, sheets: {}, notion: {} } };
 }
 
 export async function loadState(sourceDir: string): Promise<IngestState> {
