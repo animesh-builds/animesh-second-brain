@@ -59,7 +59,7 @@ test("renderPage redacts PII, adds the notice, strips url tracking params", () =
 
 test("classifySensitivity flags job-search / compensation / money", () => {
   assert.equal(classifySensitivity("Razorpay Interview Confirmation", "design round").sensitive, true);
-  assert.equal(classifySensitivity("Re: offer", "Expected CTC: 45 LPA").sensitive, true);
+  assert.equal(classifySensitivity("Re: offer", "Expected CTC: 99 LPA").sensitive, true);
   assert.equal(classifySensitivity("OpenRouter receipt", "Amount paid $10.80").sensitive, true);
   assert.deepEqual(
     classifySensitivity("Job alert", "Product Manager applied").categories.includes("job-search"),
